@@ -57,6 +57,7 @@ int const WRITE_BUFFER_SIZE = 10 * 1024;
     [inputStream open];
     
     outputStream = (__bridge NSOutputStream *)writeStream;
+    [outputStream setDelegate:self];
     [outputStream open];
 
     [self performSelectorOnMainThread:@selector(runReadLoop) withObject:nil waitUntilDone:NO];
@@ -117,6 +118,8 @@ int const WRITE_BUFFER_SIZE = 10 * 1024;
 
 - (void)closeOutputStream {
     [outputStream close];
+    [outputStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    [outputStream setDelegate:nil];
     outputStream = nil;
 }
 
@@ -137,12 +140,14 @@ int const WRITE_BUFFER_SIZE = 10 * 1024;
     
     switch(event) {
         case NSStreamEventOpenCompleted: {
+            NSLog(@"NSStreamEventOpenCompleted");
             self.openEventHandler();
             wasOpenned = TRUE;
             break;
         }
         case NSStreamEventHasBytesAvailable: {
             if(stream == inputStream) {
+                NSLog(@"NSStreamEventHasBytesAvailable");
                 uint8_t buf[65535];
                 long len = [inputStream read:buf maxLength:65535];
 
@@ -158,7 +163,7 @@ int const WRITE_BUFFER_SIZE = 10 * 1024;
             break;
         }
         case NSStreamEventEndEncountered: {
-            
+            NSLog(@"NSStreamEventEndEncountered");
             if(stream == inputStream) {
                 [self closeInputStream];
                 
@@ -213,8 +218,8 @@ int const WRITE_BUFFER_SIZE = 10 * 1024;
 }
 
 - (void)close {
-    self.closeEventHandler(FALSE);
     [self closeStreams];
+    self.closeEventHandler(FALSE);
 }
 
 - (void)closeStreams {
