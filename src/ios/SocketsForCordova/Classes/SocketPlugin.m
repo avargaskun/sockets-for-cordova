@@ -28,6 +28,8 @@
 	NSString *host = [command.arguments objectAtIndex:1];
 	NSNumber *port = [command.arguments objectAtIndex:2];
     
+    NSLog(@"SocketPlugin.m open: %@", socketKey);
+    
     if (socketAdapters == nil) {
 		self->socketAdapters = [[NSMutableDictionary alloc] init];
 	}
@@ -91,48 +93,83 @@
 - (void) write:(CDVInvokedUrlCommand *) command {
 	
     NSString* socketKey = [command.arguments objectAtIndex:0];
+    NSLog(@"SocketPlugin.m write: %@", socketKey);
     NSArray *data = [command.arguments objectAtIndex:1];
+    SocketAdapter *socket = nil;
+    @try{
+        socket = [self getSocketAdapter:socketKey];
+    }
+    @catch(NSException *e){
+        NSLog(@"NSException: %@", e.reason);
+    }
     
-    SocketAdapter *socket = [self getSocketAdapter:socketKey];
-    
-	[self.commandDelegate runInBackground:^{
-        @try {
-            [socket write:data];
+    if(socket == nil){
+        NSLog(@"SocketPlugin.m: write: socket could not be found");
+        [self.commandDelegate runInBackground:^{
             [self.commandDelegate
-             sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK]
+             sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"socket not found error"]
              callbackId:command.callbackId];
-        }
-        @catch (NSException *e) {
-            [self.commandDelegate
-             sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:e.reason]
-             callbackId:command.callbackId];
-        }
-    }];
+        }];
+    } else
+    {
+        [self.commandDelegate runInBackground:^{
+            @try {
+                [socket write:data];
+                [self.commandDelegate
+                 sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK]
+                 callbackId:command.callbackId];
+            }
+            @catch (NSException *e) {
+                [self.commandDelegate
+                 sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:e.reason]
+                 callbackId:command.callbackId];
+            }
+        }];
+    }
 }
 
 - (void) shutdownWrite:(CDVInvokedUrlCommand *) command {
     
     NSString* socketKey = [command.arguments objectAtIndex:0];
 	
-	SocketAdapter *socket = [self getSocketAdapter:socketKey];
+    NSLog(@"SocketPlugin.m shutdownWrite: %@", socketKey);
     
-    [self.commandDelegate runInBackground:^{
-        @try {
-            [socket shutdownWrite];
+    SocketAdapter *socket = nil;
+    @try{
+        socket = [self getSocketAdapter:socketKey];
+    }
+    @catch(NSException *e){
+        NSLog(@"NSException: %@", e.reason);
+    }
+    
+    if(socket == nil){
+        NSLog(@"SocketPlugin.m: shutdownwrite: socket could not be found");
+        [self.commandDelegate runInBackground:^{
             [self.commandDelegate
-            sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK]
-            callbackId:command.callbackId];
-        }
-        @catch (NSException *e) {
-            [self.commandDelegate
-            sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:e.reason]
-            callbackId:command.callbackId];
-        }
-    }];
+             sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"socket not found error"]
+             callbackId:command.callbackId];
+        }];
+    } else {
+        [self.commandDelegate runInBackground:^{
+            @try {
+                [socket shutdownWrite];
+                [self.commandDelegate
+                 sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK]
+                 callbackId:command.callbackId];
+            }
+            @catch (NSException *e) {
+                [self.commandDelegate
+                 sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:e.reason]
+                 callbackId:command.callbackId];
+            }
+        }];
+    }
 }
 
 - (void) close:(CDVInvokedUrlCommand *) command {
     NSString* socketKey = [command.arguments objectAtIndex:0];
+    NSLog(@"SocketPlugin.m close: %@", socketKey);
+    
     SocketAdapter *socket = nil;
     @try{
         socket = [self getSocketAdapter:socketKey];
@@ -145,6 +182,7 @@
      * Socket could not be found in the dictionary. Connection must have been already closed.
      */
     if(socket == nil){
+        NSLog(@"SocketPlugin.m: close: socket could not be found");
         [self.commandDelegate runInBackground:^{
             [self.commandDelegate
              sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK]
@@ -155,6 +193,7 @@
     }
     
     [self.commandDelegate runInBackground:^{
+        NSLog(@"SocketPlugin.m: close: attempting to close");
         @try {
             [socket close];
             [self.commandDelegate
