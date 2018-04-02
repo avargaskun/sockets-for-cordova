@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/leighwoltman/sockets-for-cordova.git"
+    "url": "git+https://github.com/innovasea/sockets-for-cordova.git"
   },
   "keywords": [
     "socket",
@@ -28,7 +28,7 @@
   "author": "blocshop",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/blocshop/sockets-for-cordova/issues"
+    "url": "https://github.com/innovasea/sockets-for-cordova/issues"
   },
-  "homepage": "https://github.com/leighwoltman/sockets-for-cordova#readme"
+  "homepage": "https://github.com/innovasea/sockets-for-cordova#readme"
 }
